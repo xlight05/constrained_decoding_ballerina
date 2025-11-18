@@ -1,0 +1,43 @@
+FOREACH: "foreach"
+IN: "in"
+PUBLIC: "public"
+FUNCTION: "function"
+IMPORT: "import"
+INT: "int"
+STRING: "string"
+VAR: "var"
+
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+DECIMAL_NUMBER: /0|[1-9][0-9]*/
+STRING_LITERAL: /"([^"\n\r\\]|\\[tnr\\"])*"/
+
+SP: / +/
+NL: /[\n][ ]*/
+
+start: import_decl NL NL? function_defn NL?
+
+import_decl: IMPORT SP IDENTIFIER "/" IDENTIFIER ";"
+
+function_defn: PUBLIC SP FUNCTION SP IDENTIFIER "(" ")" SP "{" NL main_statement_list "}"
+
+main_statement_list: (main_statement NL)*
+
+main_statement: foreach_stmt
+
+foreach_stmt: FOREACH SP type_name SP IDENTIFIER SP IN SP range_expr SP "{" NL inner_statement_list "}"
+
+inner_statement_list: (inner_statement NL)*
+
+inner_statement: call_stmt
+
+call_stmt: qualified_id "(" expression ")" ";"
+
+range_expr: DECIMAL_NUMBER "..." DECIMAL_NUMBER
+
+type_name: INT | STRING | VAR
+
+expression: IDENTIFIER
+          | DECIMAL_NUMBER
+          | STRING_LITERAL
+
+qualified_id: IDENTIFIER ":" IDENTIFIER

@@ -1,0 +1,24 @@
+# Template GBNF Grammar - Ballerina in Markdown Code Block
+# This wraps the Ballerina grammar inside a markdown response structure
+
+# Root rule - markdown response with code block
+root ::= prefix-text code-block suffix-text
+
+# Prefix text (explanation before the code block)
+prefix-text ::= safe-text? ws
+
+# The markdown code block with Ballerina
+code-block ::= "```ballerina\n" ballerina-program "\n```"
+
+# Suffix text (explanation after the code block)
+suffix-text ::= ws safe-text?
+
+# Safe text - any characters that won't conflict with code fences
+# Allows single/double backticks but not triple backticks
+safe-text ::= safe-char+
+safe-char ::= [^`\x00] | "`" [^`\x00] | "``" [^`\x00]
+
+# ============================================
+# Ballerina Grammar (injected from spec.gbnf)
+# ============================================
+{BALLERINA_GRAMMAR}

@@ -1,0 +1,74 @@
+# Minimal GBNF Grammar for Ballerina
+# This grammar supports basic function definitions with foreach loops
+
+# Root rule - a Ballerina program
+root ::= ws import-list function-def ws
+
+# Import declarations
+import-list ::= (import-decl)*
+import-decl ::= "import" ws org-name-opt module-name ws ";" ws
+org-name-opt ::= (identifier ws "/" ws)?
+module-name ::= identifier (ws "." ws identifier)*
+
+# Function definition
+function-def ::= "public" ws "function" ws identifier ws "(" ws ")" ws block
+
+# Block statement
+block ::= "{" ws statement-list "}"
+
+# Statement list (zero or more statements)
+statement-list ::= (ws statement)* ws
+
+# Statements
+statement ::= foreach-stmt | while-stmt | var-decl-stmt | assignment-stmt | expression-stmt
+
+# Expression statement
+expression-stmt ::= expression ws ";"
+
+# Variable declaration statement (e.g., int i = 0;)
+var-decl-stmt ::= type-descriptor ws identifier ws "=" ws expression ws ";"
+
+# Assignment statement (e.g., i = i + 1;)
+assignment-stmt ::= variable-reference ws "=" ws expression ws ";"
+
+# Foreach statement with range expression
+foreach-stmt ::= "foreach" ws type-descriptor ws identifier ws "in" ws range-expr ws block
+
+# While statement (e.g., while (i <= 10) { ... })
+while-stmt ::= "while" ws "(" ws comparison-expr ws ")" ws block
+
+# Range expression (e.g., 0...9)
+range-expr ::= integer ws "..." ws integer
+
+# Comparison expression (e.g., i <= 10)
+comparison-expr ::= expression ws comparison-op ws expression
+comparison-op ::= "<=" | ">=" | "==" | "!=" | "<" | ">"
+
+# Expressions
+expression ::= binary-expr | call-expr | variable-reference | integer
+
+# Binary arithmetic expression (e.g., i + 1)
+binary-expr ::= primary-expr ws arithmetic-op ws primary-expr
+arithmetic-op ::= "+" | "-" | "*" | "/" | "%"
+primary-expr ::= variable-reference | integer
+
+# Function/method call expression
+call-expr ::= variable-reference ws "(" ws arg-list ws ")"
+
+# Variable reference (qualified or simple identifier)
+variable-reference ::= identifier (ws ":" ws identifier)?
+
+# Argument list for function/method calls
+arg-list ::= (expression (ws "," ws expression)*)?
+
+# Type descriptors
+type-descriptor ::= "int" | "string" | "float" | "boolean" | "var"
+
+# Integer literal
+integer ::= [0-9]+
+
+# Identifier (variable and function names)
+identifier ::= [a-zA-Z_] [a-zA-Z0-9_]*
+
+# Whitespace (spaces, tabs, newlines)
+ws ::= [ \t\n\r]*

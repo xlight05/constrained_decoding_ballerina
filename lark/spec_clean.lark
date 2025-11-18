@@ -1,0 +1,126 @@
+FOREACH: "foreach"
+IN: "in"
+PUBLIC: "public"
+FUNCTION: "function"
+IMPORT: "import"
+RETURNS: "returns"
+IF: "if"
+ELSE: "else"
+RETURN: "return"
+
+INT: "int"
+STRING: "string"
+FLOAT: "float"
+BOOLEAN: "boolean"
+DECIMAL: "decimal"
+VAR: "var"
+
+TRUE: "true"
+FALSE: "false"
+
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+DECIMAL_NUMBER: /0|[1-9][0-9]*/
+STRING_LITERAL: /"([^"\n\r\\]|\\[tnr\\"])*"/
+
+SP: / +/
+NL: /[\n][ ]*/
+WS: /[ \t\n]+/
+
+start: module_part
+module_part: import_decl* NL? other_decl NL?
+
+other_decl: function_defn
+
+import_decl: IMPORT SP org_name "/" module_name ";" NL?
+           | IMPORT SP module_name ";" NL?
+
+org_name: IDENTIFIER
+module_name: IDENTIFIER ("." IDENTIFIER)*
+
+function_defn: PUBLIC SP FUNCTION SP IDENTIFIER function_signature SP function_body_block
+             | FUNCTION SP IDENTIFIER function_signature SP function_body_block
+
+function_signature: "(" param_list? ")" return_type_descriptor?
+                  | "(" ")"
+
+return_type_descriptor: SP RETURNS SP type_descriptor
+
+param_list: required_param ("," SP required_param)*
+
+required_param: type_descriptor SP IDENTIFIER
+
+function_body_block: "{" NL? sequence_stmt WS? "}"
+
+sequence_stmt: (statement NL?)*
+
+block_stmt: "{" NL? sequence_stmt WS? "}"
+
+statement: call_stmt
+         | foreach_stmt
+         | if_else_stmt
+         | return_stmt
+         | local_var_decl_stmt
+
+local_var_decl_stmt: typed_binding_pattern SP "=" SP expression ";"
+
+typed_binding_pattern: inferable_type_descriptor SP IDENTIFIER
+
+inferable_type_descriptor: type_descriptor | VAR
+
+call_stmt: function_call_expr ";"
+
+foreach_stmt: FOREACH SP typed_binding_pattern SP IN SP expression SP block_stmt
+
+if_else_stmt: IF SP expression SP block_stmt (SP ELSE SP block_stmt)?
+
+return_stmt: RETURN (SP expression)? ";"
+
+type_descriptor: simple_type_descriptor
+
+simple_type_descriptor: INT
+                      | STRING
+                      | FLOAT
+                      | BOOLEAN
+                      | DECIMAL
+
+expression: range_expr
+          | additive_expr
+
+range_expr: additive_expr "..." additive_expr
+          | additive_expr "..<" additive_expr
+
+additive_expr: multiplicative_expr (("+" | "-") multiplicative_expr)*
+
+multiplicative_expr: unary_expr (("*" | "/" | "%") unary_expr)*
+
+unary_expr: primary_expr
+          | "-" unary_expr
+          | "+" unary_expr
+          | "!" unary_expr
+
+primary_expr: literal
+            | function_call_expr
+            | method_call_expr
+            | variable_reference_expr
+            | "(" expression ")"
+
+function_call_expr: variable_reference "(" arg_list? ")"
+
+method_call_expr: variable_reference "." IDENTIFIER "(" arg_list? ")"
+
+arg_list: expression ("," SP expression)*
+
+variable_reference_expr: variable_reference
+
+variable_reference: qualified_identifier
+                  | IDENTIFIER
+
+qualified_identifier: IDENTIFIER ":" IDENTIFIER
+
+literal: int_literal
+       | string_literal
+       | boolean_literal
+
+int_literal: DECIMAL_NUMBER
+string_literal: STRING_LITERAL
+boolean_literal: TRUE | FALSE

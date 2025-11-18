@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:gbnf.dev)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(npm run validate:*)",
+      "Bash(node dist/index.js:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

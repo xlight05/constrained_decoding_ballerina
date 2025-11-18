@@ -1,0 +1,214 @@
+// =============================================================================
+// Lark Grammar for Ballerina (Subset for Constrained Decoding)
+// Based on Ballerina Language Specification 2019R3
+// 
+// CONSTRAINED DECODING DESIGN PRINCIPLES:
+// 1. NO %ignore WS - whitespace must be explicit for proper generation
+// 2. Use explicit whitespace terminals (SP, NL) between tokens
+// 3. Alternatives ARE ALLOWED when they start with DIFFERENT keywords
+//    (e.g., foreach vs while vs if - LLM can distinguish by semantic context)
+// 4. AVOID alternatives starting with the same token type (e.g., both IDENTIFIER)
+// 5. Keywords must be defined BEFORE IDENTIFIER for proper precedence
+// =============================================================================
+
+// =============================================================================
+// KEYWORDS (must come before IDENTIFIER for Lark precedence)
+// =============================================================================
+IMPORT: "import"
+PUBLIC: "public"
+FUNCTION: "function"
+RETURNS: "returns"
+RETURN: "return"
+
+// Control flow keywords
+FOREACH: "foreach"
+WHILE: "while"
+IF: "if"
+ELSE: "else"
+IN: "in"
+
+// Type keywords
+INT: "int"
+STRING: "string"
+FLOAT: "float"
+BOOLEAN: "boolean"
+VAR: "var"
+
+// Literal keywords
+TRUE: "true"
+FALSE: "false"
+
+// =============================================================================
+// TERMINALS
+// =============================================================================
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+DECIMAL_NUMBER: /0|[1-9][0-9]*/
+STRING_LITERAL: /"([^"\n\r\\]|\\[tnr\\"])*"/
+
+// Whitespace - explicit, never ignored
+SP: / +/
+NL: /[\n][ ]*/
+
+// =============================================================================
+// MODULE STRUCTURE
+// =============================================================================
+start: module_part
+
+module_part: import_decl NL NL function_defn NL?
+
+import_decl: IMPORT SP IDENTIFIER "/" IDENTIFIER ";"
+
+// =============================================================================
+// FUNCTION DEFINITION
+// =============================================================================
+function_defn: PUBLIC SP FUNCTION SP IDENTIFIER function_signature SP function_body
+
+function_signature: "(" param_list? ")" return_type?
+                  | "(" ")"
+
+return_type: SP RETURNS SP type_descriptor
+
+param_list: param ("," SP param)*
+
+param: type_descriptor SP IDENTIFIER
+
+function_body: "{" NL statement_list "}"
+
+// =============================================================================
+// STATEMENTS
+// Statement alternatives are SAFE here because each starts with a DIFFERENT keyword:
+// - foreach_stmt starts with "foreach"
+// - while_stmt starts with "while"  
+// - if_stmt starts with "if"
+// - return_stmt starts with "return"
+// - var_decl_stmt starts with a type keyword (int/string/var/etc.)
+// - call_stmt starts with IDENTIFIER (qualified call like io:println)
+//
+// The LLM can correctly choose based on semantic context because the
+// distinguishing token appears at the START of each alternative.
+// =============================================================================
+statement_list: (statement NL)*
+
+statement: foreach_stmt
+         | while_stmt
+         | if_stmt
+         | return_stmt
+         | var_decl_stmt
+         | assignment_stmt
+         | call_stmt
+
+// -----------------------------------------------------------------------------
+// Loop Statements
+// -----------------------------------------------------------------------------
+foreach_stmt: FOREACH SP typed_binding_pattern SP IN SP iterable_expr SP block
+
+while_stmt: WHILE SP expression SP block
+
+// -----------------------------------------------------------------------------
+// Conditional Statements  
+// -----------------------------------------------------------------------------
+if_stmt: IF SP expression SP block else_clause?
+
+else_clause: SP ELSE SP block
+           | SP ELSE SP if_stmt
+
+// -----------------------------------------------------------------------------
+// Return Statement
+// -----------------------------------------------------------------------------
+return_stmt: RETURN ";"
+           | RETURN SP expression ";"
+
+// -----------------------------------------------------------------------------
+// Variable Declaration
+// Note: Starts with type keyword, distinguishable from call_stmt (starts with IDENTIFIER)
+// -----------------------------------------------------------------------------
+var_decl_stmt: typed_binding_pattern SP "=" SP expression ";"
+
+typed_binding_pattern: type_descriptor SP IDENTIFIER
+                     | VAR SP IDENTIFIER
+
+// -----------------------------------------------------------------------------
+// Assignment Statement
+// Note: Both assignment_stmt and call_stmt start with IDENTIFIER.
+// We list assignment_stmt BEFORE call_stmt so the grammar tries it first.
+// The "=" after IDENTIFIER disambiguates from call_stmt which has "(" or ":".
+// -----------------------------------------------------------------------------
+assignment_stmt: IDENTIFIER SP "=" SP expression ";"
+
+// -----------------------------------------------------------------------------
+// Call Statement (function/method calls)
+// Note: Starts with IDENTIFIER - this is the "catch-all" for expression statements
+// -----------------------------------------------------------------------------
+call_stmt: call_expr ";"
+
+// =============================================================================
+// BLOCKS
+// =============================================================================
+block: "{" NL statement_list "}"
+
+// =============================================================================
+// EXPRESSIONS
+// Ordered from lowest to highest precedence
+// =============================================================================
+expression: range_expr
+
+range_expr: comparison_expr
+          | comparison_expr SP? "..." SP? comparison_expr
+          | comparison_expr SP? "..<" SP? comparison_expr
+
+comparison_expr: additive_expr
+               | additive_expr SP? comparison_op SP? additive_expr
+
+comparison_op: "==" | "!=" | "<" | ">" | "<=" | ">="
+
+additive_expr: multiplicative_expr
+             | additive_expr SP? additive_op SP? multiplicative_expr
+
+additive_op: "+" | "-"
+
+multiplicative_expr: unary_expr
+                   | multiplicative_expr SP? multiplicative_op SP? unary_expr
+
+multiplicative_op: "*" | "/" | "%"
+
+unary_expr: primary_expr
+          | "-" primary_expr
+          | "!" primary_expr
+
+primary_expr: literal
+            | call_expr
+            | variable_ref
+            | "(" expression ")"
+
+// =============================================================================
+// FUNCTION/METHOD CALLS
+// =============================================================================
+call_expr: qualified_id "(" arg_list? ")"
+         | IDENTIFIER "(" arg_list? ")"
+         | variable_ref "." IDENTIFIER "(" arg_list? ")"
+
+arg_list: expression ("," SP expression)*
+
+// =============================================================================
+// REFERENCES AND TYPES
+// =============================================================================
+variable_ref: qualified_id
+            | IDENTIFIER
+
+qualified_id: IDENTIFIER ":" IDENTIFIER
+
+iterable_expr: range_expr
+             | variable_ref
+
+type_descriptor: INT
+               | STRING
+               | FLOAT  
+               | BOOLEAN
+
+// =============================================================================
+// LITERALS
+// =============================================================================
+literal: DECIMAL_NUMBER
+       | STRING_LITERAL
+       | TRUE
+       | FALSE

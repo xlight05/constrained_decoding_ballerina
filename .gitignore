@@ -1,0 +1,55 @@
+# Node.js / TypeScript
+node_modules/
+dist/
+*.js.map
+*.d.ts.map
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Ballerina
+target/
+*.balx
+*.lock
+Dependencies.toml
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.claude/settings.local.json
+
+# Build artifacts
+build/
+out/
+*.class
+*.jar
+*.war
+
+# Logs
+logs/
+*.log
+
+# Grammar tracing
+traces/
+dashboard/data/*.json
+dashboard/fixtures/*.json
+!dashboard/fixtures/.gitkeep
+
+# Dashboard / Testing
+dashboard/node_modules/
+dashboard/coverage/
+dashboard/.vitest/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS specific
+Thumbs.db
+.DS_Store
