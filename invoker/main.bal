@@ -110,8 +110,10 @@ function generateWithNoWhileGrammar(string userPrompt, string grammar) returns s
         ],
         grammar: grammar,
         max_tokens: 256,
-        temperature: 0.0,
-        logprobs: 5
+        temperature: 0.0
+        // logprobs: 50,
+        // top_k: 100,
+        // top_p: 1
     };
     ChatResp resp = check cl->post("/chat/completions", req);
     check io:fileWriteJson("grammar-without-while.json", resp.toJson());

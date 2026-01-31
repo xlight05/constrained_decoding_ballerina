@@ -67,8 +67,9 @@ const lightTheme = createTheme({
 
 const ITERATIONS = [
   { id: 'no-grammar', label: 'No Grammar', file: '/no-grammar.json' },
-  { id: 'grammar-without-while', label: 'Grammar without while', file: '/grammar-without-while.json' },
-  { id: 'grammar-with-while', label: 'Grammar with while', file: '/grammar-with-while.json' },
+  { id: 'with-grammar', label: 'With Grammar', file: '/with-grammar.json' },
+  { id: 'with-prefill', label: 'With Prefill', file: '/with-prefill.json' },
+  { id: 'with-prefill-no-expr', label: 'Without Expression', file: '/with-prefill-no-expr.json' },
 ];
 
 function App() {

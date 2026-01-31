@@ -20,7 +20,7 @@ block ::= "{" ws statement-list "}"
 statement-list ::= (ws statement)* ws
 
 # Statements
-statement ::= foreach-stmt | while-stmt | var-decl-stmt | assignment-stmt | expression-stmt
+statement ::= foreach-stmt | while-stmt 
 
 # Expression statement
 expression-stmt ::= expression ws ";"
@@ -38,7 +38,7 @@ foreach-stmt ::= "foreach" ws type-descriptor ws identifier ws "in" ws range-exp
 while-stmt ::= "while" ws "(" ws comparison-expr ws ")" ws block
 
 # Range expression (e.g., 0...9)
-range-expr ::= integer ws "..." ws integer
+range-expr ::= integer ws "..." integer
 
 # Comparison expression (e.g., i <= 10)
 comparison-expr ::= expression ws comparison-op ws expression
