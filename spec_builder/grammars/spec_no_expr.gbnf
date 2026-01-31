@@ -20,7 +20,7 @@ block ::= "{" ws statement-list "}"
 statement-list ::= (ws statement)* ws
 
 # Statements
-statement ::= foreach-stmt | while-stmt | var-decl-stmt | assignment-stmt | expression-stmt
+statement ::= foreach-stmt | while-stmt 
 
 # Expression statement
 expression-stmt ::= expression ws ";"
@@ -70,5 +70,5 @@ integer ::= [0-9]+
 # Identifier (variable and function names)
 identifier ::= [a-zA-Z_] [a-zA-Z0-9_]*
 
-# Whitespace (spaces, tabs, newlines)
-ws ::= [ \t\n\r]*
+# Whitespace (spaces, tabs, newlines) - require at least one
+ws ::= [ \t\n\r]+

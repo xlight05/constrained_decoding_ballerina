@@ -31,7 +31,7 @@ type ChatResp record {
     Choice[] choices;
 };
 
-string prompt = "Write an app to print from 0 to 10 in ballerina lang";
+string prompt = "Write an app to print from 0 to 10 in ballerina";
 // string prompt = "Write an ballerina hello world main";
 
 http:Client cl = check new ("http://localhost:8080/v1", timeout = 120);
@@ -82,19 +82,21 @@ function generateWithoutGrammar(string userPrompt) returns string|error {
 # + userPrompt - The user's prompt
 # + grammar - The raw GBNF grammar string
 # + return - The generated content or an error
-function generateWithRawGrammar(string userPrompt, string grammar) returns string|error {
+function generateWithRawGrammar(string userPrompt, string grammar, boolean prefill, string outFile) returns string|error {
     ChatReq req = {
         messages: [
-            {role: "user", content: userPrompt},
-            {role: "assistant", content: "<think>\nWe are going to write a Ballerina program that prints numbers from 0 to 10.\n We can use a for loop to iterate from 0 to 10 and print each number.\n In Ballerina, the range is inclusive of the start and exclusive of the end if we use the `to` keyword.\n So, we can do: for i in 0..10\n</think>Here's a Ballerina program that prints numbers from 0 to 10:\n```ballerina\n"}
+            {role: "user", content: userPrompt}
         ],
         grammar: grammar,
         max_tokens: 256,
         temperature: 0.0,
         logprobs: 10
     };
+    if prefill {
+        req.messages.push({role: "assistant", content: "<think>\nWe are going to write a Ballerina program that prints numbers from 0 to 10.\n We can use a for loop to iterate from 0 to 10 and print each number.\n In Ballerina, the range is inclusive of the start and exclusive of the end if we use the `to` keyword.\n So, we can do: for i in 0..10\n</think>Here's a Ballerina program that prints numbers from 0 to 10:\n```ballerina\n"});
+    }
     ChatResp resp = check cl->post("/chat/completions", req);
-    check io:fileWriteJson("grammar-with-while.json", resp.toJson());
+    check io:fileWriteJson(outFile, resp.toJson());
     return resp.choices[0].message.content;
 }
 
@@ -158,35 +160,30 @@ function generateWithLarkGrammar(string userPrompt, string grammar) returns stri
 
 public function main() returns error? {
     // Load grammars
-    string templatedGbnf = check buildTemplatedGrammar();
-    string larkSpec = "%llguidance {}\n" + check io:fileReadString("../lark/spec.lark");
+    // string templatedGbnf = check buildTemplatedGrammar();
+    // string larkSpec = "%llguidance {}\n" + check io:fileReadString("../lark/spec.lark");
     string rawGbnf = check io:fileReadString("../spec_builder/grammars/spec.gbnf");
-    string noWhileGbnf = check io:fileReadString("../spec_builder/grammars/spec_no_while.gbnf");
+    string noExprGbnf = check io:fileReadString("../spec_builder/grammars/spec_no_expr.gbnf");
 
     // // Generate without grammar
     // string resultNoGrammar = check generateWithoutGrammar(prompt);
     // io:println("=== Result without Grammar ===");
     // io:println(resultNoGrammar);
 
-    // Generate with raw GBNF grammar (with while loops)
-    string resultRawGrammar = check generateWithRawGrammar(prompt, rawGbnf);
-    io:println("=== Result with Raw Grammar (with while) ===");
-    io:println(resultRawGrammar);
+    // // Generate with raw GBNF grammar without prefill
+    // string resultRawGrammar = check generateWithRawGrammar(prompt, rawGbnf, false, "with-grammar.json");
+    // io:println("=== Result with Raw Grammar (without prefill) ===");
+    // io:println(resultRawGrammar);
 
-    // // Generate with no-while GBNF grammar
-    // string resultNoWhile = check generateWithNoWhileGrammar(prompt, noWhileGbnf);
-    // io:println("=== Result with No-While Grammar ===");
-    // io:println(resultNoWhile);
+    // // Generate with raw GBNF grammar with prefill
+    // string resultRawGrammarPrefill = check generateWithRawGrammar(prompt, rawGbnf, true, "with-prefill.json");
+    // io:println("=== Result with Raw Grammar (with prefill) ===");
+    // io:println(resultRawGrammarPrefill);
 
-    // // Generate with templated grammar (markdown wrapper)
-    // string resultTemplated = check generateWithTemplatedGrammar(prompt, templatedGbnf);
-    // io:println("=== Result with Templated Grammar (Markdown) ===");
-    // io:println(resultTemplated);
-
-    // // Generate with Lark grammar
-    // string resultLark = check generateWithLarkGrammar(prompt, larkSpec);
-    // io:println("=== Result with Lark Grammar ===");
-    // io:println(resultLark);
+    // Generate with no expr GBNF grammar with prefill
+    string resultNoExprGrammarPrefill = check generateWithRawGrammar(prompt, noExprGbnf, false, "with-prefill-no-expr.json");
+    io:println("=== Result with No Expr Grammar (with prefill) ===");
+    io:println(resultNoExprGrammarPrefill);
 }
 
 
