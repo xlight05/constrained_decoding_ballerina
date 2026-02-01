@@ -1,5 +1,4 @@
 # Minimal GBNF Grammar for Ballerina
-# This grammar supports basic function definitions with foreach loops
 
 # Root rule - a Ballerina program
 root ::= ws import-list function-def ws

@@ -1,17 +1,16 @@
 # Minimal GBNF Grammar for Ballerina
-# This grammar supports basic function definitions with foreach loops
 
 # Root rule - a Ballerina program
 root ::= ws import-list function-def ws
 
 # Import declarations
 import-list ::= (import-decl)*
-import-decl ::= "import" ws org-name-opt module-name ws ";" ws
+import-decl ::= "import" mws org-name-opt module-name ws ";" ws
 org-name-opt ::= (identifier ws "/" ws)?
 module-name ::= identifier (ws "." ws identifier)*
 
 # Function definition
-function-def ::= "public" ws "function" ws identifier ws "(" ws ")" ws block
+function-def ::= "public" mws "function" mws identifier ws "(" ws ")" ws block
 
 # Block statement
 block ::= "{" ws statement-list "}"
@@ -20,25 +19,30 @@ block ::= "{" ws statement-list "}"
 statement-list ::= (ws statement)* ws
 
 # Statements
-statement ::= foreach-stmt | while-stmt 
+statement ::= foreach-stmt | while-stmt
+
+# Foreach block - allows expression statements in addition to regular statements
+foreach-block ::= "{" ws foreach-statement-list "}"
+foreach-statement-list ::= (ws foreach-statement)* ws
+foreach-statement ::= foreach-stmt | while-stmt | expression-stmt
 
 # Expression statement
 expression-stmt ::= expression ws ";"
 
 # Variable declaration statement (e.g., int i = 0;)
-var-decl-stmt ::= type-descriptor ws identifier ws "=" ws expression ws ";"
+var-decl-stmt ::= type-descriptor mws identifier ws "=" ws expression ws ";"
 
 # Assignment statement (e.g., i = i + 1;)
 assignment-stmt ::= variable-reference ws "=" ws expression ws ";"
 
 # Foreach statement with range expression
-foreach-stmt ::= "foreach" ws type-descriptor ws identifier ws "in" ws range-expr ws block
+foreach-stmt ::= "foreach" mws type-descriptor mws identifier mws "in" mws range-expr ws foreach-block
 
 # While statement (e.g., while (i <= 10) { ... })
 while-stmt ::= "while" ws "(" ws comparison-expr ws ")" ws block
 
 # Range expression (e.g., 0...9)
-range-expr ::= integer ws "..." integer
+range-expr ::= integer ws "..." ws integer
 
 # Comparison expression (e.g., i <= 10)
 comparison-expr ::= expression ws comparison-op ws expression
@@ -70,5 +74,8 @@ integer ::= [0-9]+
 # Identifier (variable and function names)
 identifier ::= [a-zA-Z_] [a-zA-Z0-9_]*
 
-# Whitespace (spaces, tabs, newlines) - require at least one
-ws ::= [ \t\n\r]+
+# Optional whitespace (zero or more) - around punctuation, braces, operators
+ws ::= [ \t\n\r]*
+
+# Mandatory whitespace (one or more) - between keywords/identifiers
+mws ::= [ \t\n\r]+
